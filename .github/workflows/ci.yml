@@ -30,4 +30,6 @@ jobs:
       run: mypy .
 
     - name: Run tests
-      run: pytest tests/unit/test_event_schema.py
+      run: |
+        export PYTHONPATH=$PYTHONPATH:.
+        python -m pytest tests/unit/test_event_schema.py
