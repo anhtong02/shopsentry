@@ -21,15 +21,17 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install ruff mypy pytest pydantic confluent-kafka
+        # We add 'email-validator' because Pydantic needs it for UserSignup logic
+        pip install ruff mypy pytest pydantic confluent-kafka email-validator
 
     - name: Lint with ruff
       run: ruff check .
 
     - name: Type check with mypy
-      run: mypy .
+      run: mypy simulator pipeline tests
 
     - name: Run tests
       run: |
         export PYTHONPATH=$PYTHONPATH:.
-        python -m pytest tests/unit/
+        # This now runs test_event_schema.py, test_agents.py, and test_features.py
+        python -m pytest tests/unit/ -v

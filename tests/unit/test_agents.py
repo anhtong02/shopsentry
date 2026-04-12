@@ -3,8 +3,10 @@ from simulator.event_schema import (
     PageViewEvent, 
     UserSignupEvent,
     ProductViewEvent,
-    PaymentEvent)
+    PaymentEvent,
+    BaseEvent)
 from simulator.agents.fraud_ring import FraudRing
+from simulator.agents.churning_user import ChurningUser
 
 def test_normal_user_session_logic() -> None :
     # 1. Setup
@@ -89,3 +91,31 @@ def test_fraud_ring_conversion_rate() -> None:
     
     assert len(success_payments) == ring_size, \
         f"Fraud ring of {ring_size} should have {ring_size} successful payments"
+    
+
+def test_churning_user_lifecycle_decay() -> None:
+    """Check that a churning user eventually ghost us (fewer events over time)."""
+    user = ChurningUser()
+    lifecycle = user.generate_lifecycle()
+    
+    # Group events by session_id to count them
+    sessions: dict[str, list[BaseEvent]] = {}
+    for e in lifecycle:
+        if e.session_id not in sessions:
+            sessions[e.session_id] = []
+        sessions[e.session_id].append(e)
+    
+    # 1. Check: Did we get multiple sessions?
+    session_list = list(sessions.values())
+    assert len(session_list) > 1, "Churning user should have multiple sessions"
+
+    # 2. Check: Decay logic
+    # The first session should generally be more active than the last session
+    first_session_len = len(session_list[0])
+    last_session_len = len(session_list[-1])
+    
+    assert first_session_len >= last_session_len, "Engagement should stay same or decrease"
+    
+    # 3. Check: Chronological Order
+    # The last event of the last session should be much later than the first event
+    assert session_list[-1][-1].timestamp > session_list[0][0].timestamp

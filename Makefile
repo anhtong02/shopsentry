@@ -1,13 +1,10 @@
 .PHONY: test lint fmt up down produce consume
 
 test:
-	python -m pytest tests/unit/test_event_schema.py -v
-	python -m pytest tests/unit/test_agents.py -v
-
+	python -m pytest tests/unit/ -v
 lint:
 	ruff check .
-	mypy .
-
+	mypy simulator pipeline tests
 fmt:
 	ruff format .
 
@@ -22,3 +19,6 @@ produce:
 
 consume:
 	python -m simulator.consumer
+
+clean: 
+	rm -rf __pycache__ .pytest_cache .mypy_cache .ruff_cache
