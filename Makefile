@@ -2,6 +2,7 @@
 
 test:
 	python -m pytest tests/unit/test_event_schema.py -v
+	python -m pytest tests/unit/test_agents.py -v
 
 lint:
 	ruff check .

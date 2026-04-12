@@ -1,5 +1,5 @@
 from confluent_kafka import Consumer, KafkaError
-from simulator.event_schema import PageViewEvent
+from simulator.event_schema import PageViewEvent, deserialize_event
 
 
 def create_consumer() -> Consumer:
@@ -42,7 +42,7 @@ def consume_events(topic: str) -> None:
             # 2. Use your schema logic to turn bytes back into an Object
             # For now, we know it's a PageViewEvent.
             # Later, we can make this smarter to handle any event type!
-            event = PageViewEvent.from_kafka_value(raw_data)
+            event = deserialize_event(raw_data)
 
             if isinstance(event, PageViewEvent):
                 print(f"RECEIVED: {event.event_type} | User: {event.user_id} | URL: {event.url}")
