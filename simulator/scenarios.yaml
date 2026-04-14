@@ -1,0 +1,17 @@
+normal_day:
+  normal_users: 100
+  bots: 2
+  fraud_rings: 0
+  churning_users: 5
+
+bot_attack:
+  normal_users: 50
+  bots: 150
+  fraud_rings: 2
+  churning_users: 0
+
+flash_sale:
+  normal_users: 800
+  bots: 50
+  fraud_rings: 5
+  churning_users: 0

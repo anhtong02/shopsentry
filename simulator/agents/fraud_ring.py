@@ -86,10 +86,14 @@ class FraudRing:
     """
     def __init__(self, size: int = 10):
         self.shared_ip = f"192.168.1.{random.randint(10, 255)}"
+
+        #Generate a random base subnet (e.g., 45.12.88.x)
+        base_subnet = f"{random.randint(11, 250)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
+
         self.target_product = f"luxury_watch_{random.randint(1, 5)}"
         self.agents = [
             FraudAgent(
-                ip_address=self.shared_ip, 
+                ip_address=f"{base_subnet}.{random.randint(1, 254)}", 
                 target_product_id=self.target_product
             ) for _ in range(size)
         ]

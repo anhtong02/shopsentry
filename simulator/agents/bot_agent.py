@@ -20,6 +20,12 @@ class BotAgent(BaseAgent):
 
     def generate_event(self) -> BaseEvent:
         self.event_counter += 1
+
+        #Rotating Proxy Simulation
+        # The scraper bot changes its IP address every 5 requests
+        if self.bot_type == "SCRAPER" and self.event_counter % 5 == 0:
+             self.ip_address = f"{random.randint(11, 250)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
+
         if self.event_counter >= self.max_bot_events:
             self.current_state = "EXIT"
             return PageViewEvent(user_id=self.user_id, 

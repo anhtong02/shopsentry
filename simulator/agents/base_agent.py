@@ -5,6 +5,11 @@ from simulator.event_schema import BaseEvent
 from datetime import datetime, timezone, timedelta
 import random
 
+def generate_random_ip() -> str:
+    """Generates a realistic-looking public IPv4 address."""
+    # Skipping 10.x.x.x and 192.168.x.x local blocks for realism
+    return f"{random.randint(11, 250)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
+
 class BaseAgent(BaseModel, ABC):
     user_id         : str = Field(default_factory=lambda: str(uuid4()))
     session_id      : str = Field(default_factory=lambda: str(uuid4()))
@@ -21,6 +26,12 @@ class BaseAgent(BaseModel, ABC):
         while self.current_state != "EXIT" and len(events) < max_events:
             event = self.generate_event()
             event.timestamp = self.current_time
+            
+            # ← NEW: Global IP Injection
+            # Automatically attaches the agent's current IP to the event payload
+            if "ip" not in event.properties:
+                event.properties["ip"] = self.ip_address
+
             self.current_time += timedelta(seconds=random.uniform(self.min_gap, self.max_gap))
             events.append(event)
         return events
