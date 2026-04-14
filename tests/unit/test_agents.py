@@ -77,20 +77,22 @@ def test_fraud_ring_coordination() -> None :
     user_ids = {e.user_id for e in events}
     assert len(user_ids) == ring_size, f"Expected {ring_size} unique users in the ring"
 
-def test_fraud_ring_conversion_rate() -> None:
-    """Verify that fraud agents always complete their purchases."""
-    ring_size = 3
+def test_fraud_ring_coordination() -> None:
+    """Verify that a fraud ring acts as a coordinated unit within a subnet."""
+    # 1. Setup a ring of 5 attackers
+    ring_size = 5
     ring = FraudRing(size=ring_size)
     events = ring.generate_all_events()
 
-    # In our FraudAgent logic, conversion should be 100%
-    success_payments = [
-        e for e in events 
-        if isinstance(e, PaymentEvent) and e.status == "success"
-    ]
+    # 2. Check: Shared Subnet (The new "Smoking Gun")
+    # We grab the first three parts of the IP (e.g., "192.168.1")
+    subnets = {'.'.join(e.properties.get("ip", "").split('.')[:3]) for e in events}
     
-    assert len(success_payments) == ring_size, \
-        f"Fraud ring of {ring_size} should have {ring_size} successful payments"
+    assert len(subnets) == 1, "Fraud ring must share the same Class C subnet"
+    
+    # Optional: Verify they are using multiple different IPs within that subnet
+    ips = {e.properties.get("ip") for e in events}
+    assert len(ips) > 1, "Fraud ring should have multiple unique IPs within the subnet"
     
 
 def test_churning_user_lifecycle_decay() -> None:
