@@ -21,14 +21,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # We add 'email-validator' because Pydantic needs it for UserSignup logic
-        pip install ruff mypy pytest pydantic confluent-kafka email-validator
+        # Added pyyaml, types-PyYAML, scipy, and redis to match your current project needs
+        pip install ruff mypy pytest pydantic confluent-kafka email-validator pyyaml types-PyYAML scipy redis
 
     - name: Lint with ruff
       run: ruff check .
 
     - name: Type check with mypy
-      run: mypy simulator pipeline tests
+      run: mypy simulator pipeline tests --install-types --non-interactive
 
     - name: Run tests
       run: |
