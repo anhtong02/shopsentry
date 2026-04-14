@@ -1,6 +1,5 @@
 import random
-from datetime import timedelta
-from typing import List
+from datetime import timedelta 
 from simulator.agents.base_agent import BaseAgent
 from simulator.event_schema import (
     BaseEvent, PageViewEvent, ProductViewEvent
@@ -8,6 +7,8 @@ from simulator.event_schema import (
 
 class ChurningUser(BaseAgent):
     session_index: int = 0
+    min_gap: float = 8.0
+    max_gap: float = 45.0
 
     def generate_event(self) -> BaseEvent:
         # The 'Boredom Factor' increases with every session
@@ -45,33 +46,14 @@ class ChurningUser(BaseAgent):
                              url="https://shop.com/exit")
 
     
-    def generate_lifecycle(self) -> List[BaseEvent]:
-        """Generates a series of sessions with realistic, random gaps."""
-        all_events: List[BaseEvent] = []
-        cumulative_days = 0
-        
+    def generate_lifecycle(self) -> list[BaseEvent]:
+        all_events: list[BaseEvent] = []
         for i in range(5):
             self.session_index = i
             self.current_state = "LANDING"
             self.session_id = str(random.getrandbits(32))
-            
-            # 1. Randomize the gap between sessions (e.g., 3 to 14 days)
-            # This makes the 'ghosting' feel much more organic.
             if i > 0:
-                cumulative_days += random.randint(6, 24)
-            
+                self.current_time += timedelta(days=random.randint(6, 24))
             session_events = self.generate_session()
-            time_offset = timedelta(days=cumulative_days)
-            
-            for e in session_events:
-                # 2. Also add a tiny bit of random minutes/seconds 
-                # so they don't all start at the exact same second of the day.
-                intra_day_offset = timedelta(
-                    minutes=random.randint(0, 59), 
-                    seconds=random.randint(0, 59)
-                )
-                e.timestamp = e.timestamp + time_offset + intra_day_offset
-                
             all_events.extend(session_events)
-            
         return all_events

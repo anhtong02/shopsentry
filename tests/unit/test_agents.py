@@ -7,7 +7,7 @@ from simulator.event_schema import (
     BaseEvent)
 from simulator.agents.fraud_ring import FraudRing
 from simulator.agents.churning_user import ChurningUser
-
+from simulator.agents.bot_agent import BotAgent
 def test_normal_user_session_logic() -> None :
     # 1. Setup
     user = NormalUser()
@@ -119,3 +119,29 @@ def test_churning_user_lifecycle_decay() -> None:
     # 3. Check: Chronological Order
     # The last event of the last session should be much later than the first event
     assert session_list[-1][-1].timestamp > session_list[0][0].timestamp
+
+def test_timestamps_have_realistic_gaps() -> None:
+    """Normal users should have seconds between events, not microseconds."""
+    user = NormalUser()
+    session = user.generate_session()
+    
+    if len(session) < 2:
+        return
+    
+    for i in range(len(session) - 1):
+        gap = (session[i+1].timestamp - session[i].timestamp).total_seconds()
+        assert gap >= 5.0, f"Gap too small: {gap}s — events should be 5-30s apart"
+        assert gap <= 30.0, f"Gap too large: {gap}s"
+
+def test_timestamps_have_realistic_gaps_bots() -> None:
+    """Bots should have microseconds between events"""
+    user = BotAgent()
+    session = user.generate_session()
+    
+    if len(session) < 2:
+        return
+    
+    for i in range(len(session) - 1):
+        gap = (session[i+1].timestamp - session[i].timestamp).total_seconds()
+        assert gap >= 0.5, f"Gap too small: {gap}s — events should be 5-30s apart"
+        assert gap <= 1.2, f"Gap too large: {gap}s"

@@ -9,6 +9,7 @@ from simulator.event_schema import (
 class NormalUser(BaseAgent):
     def generate_event(self) -> BaseEvent:
         # 1. LANDING -> SIGNUP or BROWSING
+        
         if self.current_state == "LANDING":
             if random.random() < 0.2: # 20% of new visitors sign up
                 self.current_state = "SIGNUP"
@@ -38,7 +39,7 @@ class NormalUser(BaseAgent):
             elif choice == "VIEW_PROD":
                 product_id = random.choice(PRODUCT_IDS)
                 # Decide if they like the product enough to add to cart
-                if random.random() < 0.12: # 15% chance to add to cart
+                if random.random() < 0.25: # 25% chance to add to cart
                     self.current_state = "ADDING_TO_CART"
                 return ProductViewEvent(
                     user_id=self.user_id, 

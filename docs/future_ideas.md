@@ -1,0 +1,1 @@
+1. Create stealth bot agent, which it behaves like normal user at first then performs sketchy later.
