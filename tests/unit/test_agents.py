@@ -2,7 +2,6 @@ from simulator.agents.normal_user import NormalUser
 from simulator.event_schema import (
     PageViewEvent, 
     UserSignupEvent,
-    ProductViewEvent,
     PaymentEvent,
     BaseEvent)
 from simulator.agents.fraud_ring import FraudRing
@@ -51,32 +50,6 @@ def test_normal_user_purchase_flow() -> None:
     
     assert found_purchase, "In 100 tries, no NormalUser made a purchase. Check your weights!"
 
-def test_fraud_ring_coordination() -> None :
-    """Verify that a fraud ring acts as a coordinated unit."""
-    # 1. Setup a ring of 5 attackers
-    ring_size = 5
-    ring = FraudRing(size=ring_size)
-    events = ring.generate_all_events()
-
-    # 2. Check: Shared IP (The "Smoking Gun")
-    # All events should have the same IP address in their properties
-    ips = {e.properties.get("ip") for e in events}
-    assert len(ips) == 1, "Fraud ring must share exactly one IP address"
-    assert None not in ips, "All fraud events must have an IP address"
-
-    # 3. Check: Target Product (The "Heist")
-    # All product-related events must target the exact same ID
-    target_ids = {
-        e.product_id for e in events 
-        if isinstance(e, ProductViewEvent) or hasattr(e, 'product_id')
-    }
-    assert len(target_ids) == 1, "Fraud ring must target exactly one product"
-    
-    # 4. Check: Identity Count
-    # There should be exactly 'ring_size' unique users
-    user_ids = {e.user_id for e in events}
-    assert len(user_ids) == ring_size, f"Expected {ring_size} unique users in the ring"
-
 def test_fraud_ring_coordination() -> None:
     """Verify that a fraud ring acts as a coordinated unit within a subnet."""
     # 1. Setup a ring of 5 attackers
@@ -93,6 +66,21 @@ def test_fraud_ring_coordination() -> None:
     # Optional: Verify they are using multiple different IPs within that subnet
     ips = {e.properties.get("ip") for e in events}
     assert len(ips) > 1, "Fraud ring should have multiple unique IPs within the subnet"
+
+def test_fraud_ring_conversion_rate() -> None:
+    """Verify that fraud agents always complete their purchases."""
+    ring_size = 3
+    ring = FraudRing(size=ring_size)
+    events = ring.generate_all_events()
+
+    # In our FraudAgent logic, conversion should be 100%
+    success_payments = [
+        e for e in events 
+        if isinstance(e, PaymentEvent) and e.status == "success"
+    ]
+    
+    assert len(success_payments) == ring_size, \
+        f"Fraud ring of {ring_size} should have {ring_size} successful payments"
     
 
 def test_churning_user_lifecycle_decay() -> None:
