@@ -33,6 +33,8 @@ inspect:
 apply:
 	cd feature_repo/feature_repo && feast apply
 
+activate:
+	.venv\Scripts\activate
 # ---------------------------
 
 clean: 

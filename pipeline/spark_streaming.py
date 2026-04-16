@@ -4,9 +4,12 @@ import logging
 import pyspark
 from feast import FeatureStore
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, from_json, window, count, approx_count_distinct
+from pyspark.sql.functions import (col, from_json, count, approx_count_distinct, min, max,
+    sum as _sum, when, unix_timestamp)
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from pyspark.sql import DataFrame
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 # --- THE ULTIMATE WINDOWS PYSPARK PATCH ---
 # These lines force Windows to behave like Linux. ---
 os.environ["PYSPARK_PYTHON"] = sys.executable
@@ -16,7 +19,6 @@ os.environ["HADOOP_HOME"] = r"C:\hadoop"
 os.environ["PATH"] = r"C:\hadoop\bin" + ";" + os.environ["PATH"]
 os.environ["JAVA_HOME"] = r"C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot"
 # ------------------------------------------
-
 logging.getLogger("py4j").setLevel(logging.ERROR)
 
 def main() -> None:
@@ -37,14 +39,19 @@ def main() -> None:
         
     spark.sparkContext.setLogLevel("WARN")
 
-    #Purpose: This is the contract for what JSON messages look like coming from Red Panda.
-    #Without this schema, Spark treats the JSON as a generic string and you can't query nested fields like properties.ip
-    event_schema = StructType([
-        StructField("event_id", StringType(), True),
+    #Purpose: A blueprint that tells Spark exactly what columns to expect in the JSON data
+    #         coming from Red Panda.
+    #Without this schema, Spark treats the JSON as a generic string and you can't query 
+    # nested fields like properties.ip
+    event_schema = StructType([ # <--This is a structured object with multiple fields
+        StructField("event_id", StringType(), True), #<-- Column named event_id, contains text, nullable (can be missing)
         StructField("event_type", StringType(), True),
-        StructField("timestamp", TimestampType(), True), 
-        StructField("session_id", StringType(), True),
+        StructField("timestamp", TimestampType(), True), # <-- Column contains date/time values
+        StructField("session_id", StringType(), True), # <-- true at third value means This field is allowed to be null
         StructField("user_id", StringType(), True),
+        StructField("url", StringType(), True),
+        StructField("product_id", StringType(), True),
+        StructField("status", StringType(), True),
         StructField("properties", StructType([
             StructField("ip", StringType(), True)
         ]), True)
@@ -69,18 +76,45 @@ def main() -> None:
         .select(from_json(col("json_payload"), event_schema).alias("data")) \
         .select("data.*")
 
-    # Calculate features and extract the window end time for Feast
-    feature_stream = parsed_stream \
+    aggregated = parsed_stream \
         .withWatermark("timestamp", "1 minute") \
-        .groupBy(
-            window(col("timestamp"), "10 seconds"),
-            col("user_id")
-        ) \
+        .groupBy("session_id") \
         .agg(
-            count("event_id").alias("click_velocity"),
-            approx_count_distinct("properties.ip").alias("ip_entropy")
-        ) \
-        .withColumn("event_timestamp", col("window.end")) # Feast requires this exact column name
+            count("event_id").alias("event_count"),
+            approx_count_distinct("url").alias("unique_pages_visited"),
+            approx_count_distinct("event_type").alias("event_type_diversity"),
+            min("timestamp").alias("session_start"),
+            max("timestamp").alias("session_end"),
+            _sum(when(col("event_type")=="payment", 1).otherwise(0)).alias("payment_count"),
+            _sum(when(col("event_type") == "add_to_cart", 1).otherwise(0)).alias("cart_count"),
+            min(when(col("event_type") == "user_signup", 
+                     col("timestamp"))).alias("signup_time"),
+            min(when((col("event_type") == "payment") & 
+                     (col("status") == "success"), 
+                     col("timestamp"))).alias("purchase_time"),
+            _sum(when(col("event_type") == "pageview", 1).otherwise(0)).alias("pageview_count"),
+           
+        )
+    # Calculate features and extract the window end time for Feast
+    feature_stream = aggregated \
+        .withColumn("session_duration_seconds",
+                    unix_timestamp("session_end")-unix_timestamp("session_start")) \
+        .withColumn("events_per_minute",
+                    col("event_count") / ((col("session_duration_seconds") + 0.001)/60))\
+        .withColumn("avg_time_between_events",
+                    col("session_duration_seconds") / (col("event_count") - 1 +0.001)) \
+        .withColumn("cart_to_purchase_ratio",
+                    col("payment_count") / col("cart_count") +0.001)\
+        .withColumn("has_payment",
+                when(col("payment_count") > 0, 1).otherwise(0)) \
+        .withColumn("signup_to_purchase_speed",
+                    when(col("signup_time").isNull() | col("purchase_time").isNull(), 0.0)
+                    .otherwise(unix_timestamp("purchase_time") - unix_timestamp("signup_time")))\
+        .withColumn("event_timestamp", col("session_end"))\
+        .withColumn("page_revisit_ratio",
+                    when(col("pageview_count")==0, 0.0)
+                    .otherwise(1-(col("unique_pages_visited") / col("pageview_count"))))
+
 
     # --- THE BRIDGE TO FEAST ---
     # This function runs every time Spark finishes a 10-second math batch
@@ -91,7 +125,7 @@ def main() -> None:
         if not batch_df.isEmpty():
             # 1. Push to Redis (Online Store for Real-Time)
             store = FeatureStore(repo_path="feature_repo/feature_repo")
-            store.write_to_online_store(feature_view_name="user_activity", df=pdf)
+            store.write_to_online_store(feature_view_name="session_features", df=pdf)
             
             # 2. Push to Parquet (Offline Store for Training/Testing)
             # This satisfies your syllabus requirement!
