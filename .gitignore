@@ -5,3 +5,9 @@ __pycache__/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+
+feature_repo/feature_repo/data/
+spark-warehouse/
+checkpoint/
+.spark-staging/
+.coverage

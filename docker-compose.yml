@@ -1,4 +1,31 @@
 services:
+
+  spark-master:
+    image: apache/spark:3.5.0
+    container_name: spark-master
+    ports:
+      - "9090:8080" # Spark Web UI
+      - "7077:7077" # Master connection port
+    command: [
+      "/opt/spark/bin/spark-class", 
+      "org.apache.spark.deploy.master.Master",
+      "--host", "spark-master"
+    ]
+
+  spark-worker:
+    image: apache/spark:3.5.0
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "9091:8081" # Worker Web UI
+    command: [
+      "/opt/spark/bin/spark-class", 
+      "org.apache.spark.deploy.worker.Worker", 
+      "spark://spark-master:7077",
+      "--cores", "2",
+      "--memory", "2G"
+    ]
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
     container_name: redpanda-one
