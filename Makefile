@@ -27,6 +27,10 @@ attack:
 normal:
 	python -m simulator.run --scenario normal_day
 
+mixed:
+	python -m simulator.run --scenario mixed
+
+
 inspect:
 	python tests/integration/test_data_quality.py
 

@@ -18,7 +18,9 @@ class BaseAgent(BaseModel, ABC):
     current_time    : datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     min_gap         : float = 5.0     # seconds between events
     max_gap         : float = 30.0    # subclasses override these
-    
+    agent_type      : str = "normal" #default type
+
+
     def generate_session(self) -> list[BaseEvent]:
         """The loop: generates events until the user 'leaves' the site."""
         events: list[BaseEvent] = []
@@ -31,6 +33,8 @@ class BaseAgent(BaseModel, ABC):
             # Automatically attaches the agent's current IP to the event payload
             if "ip" not in event.properties:
                 event.properties["ip"] = self.ip_address
+            event.properties["agent_type"] = self.agent_type
+
 
             self.current_time += timedelta(seconds=random.uniform(self.min_gap, self.max_gap))
             events.append(event)

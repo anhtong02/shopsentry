@@ -9,6 +9,7 @@ class ChurningUser(BaseAgent):
     session_index: int = 0
     min_gap: float = 8.0
     max_gap: float = 45.0
+    agent_type: str = "churning"
 
     def generate_event(self) -> BaseEvent:
         # The 'Boredom Factor' increases with every session

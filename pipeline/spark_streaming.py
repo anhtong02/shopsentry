@@ -9,6 +9,9 @@ from pyspark.sql.functions import (col, from_json, count, approx_count_distinct,
 from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from pyspark.sql import DataFrame
 import warnings
+import time
+
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 # --- THE ULTIMATE WINDOWS PYSPARK PATCH ---
 # These lines force Windows to behave like Linux. ---
@@ -53,7 +56,8 @@ def main() -> None:
         StructField("product_id", StringType(), True),
         StructField("status", StringType(), True),
         StructField("properties", StructType([
-            StructField("ip", StringType(), True)
+            StructField("ip", StringType(), True),
+            StructField("agent_type", StringType(), True)
         ]), True)
     ])
 
@@ -93,7 +97,7 @@ def main() -> None:
                      (col("status") == "success"), 
                      col("timestamp"))).alias("purchase_time"),
             _sum(when(col("event_type") == "pageview", 1).otherwise(0)).alias("pageview_count"),
-           
+            min(col("properties.agent_type")).alias("agent_type"),
         )
     # Calculate features and extract the window end time for Feast
     feature_stream = aggregated \
@@ -120,6 +124,7 @@ def main() -> None:
     # This function runs every time Spark finishes a 10-second math batch
     # --- THE BRIDGE TO FEAST & PARQUET ---
     def write_to_feast(batch_df: DataFrame, batch_id: int) -> None:
+        start = time.time()
         pdf = batch_df.toPandas()
         
         if not batch_df.isEmpty():
@@ -132,6 +137,8 @@ def main() -> None:
             batch_df.write.mode("append").parquet("feature_repo/feature_repo/data/offline_features")
             
             print(f"✅ Pushed {len(pdf)} profiles to Redis AND Parquet!")
+            print(f"✅ Batch {batch_id}: {len(pdf)} rows in {time.time() - start:.2f}s")
+
     # ---------------------------
     # ---------------------------
 

@@ -16,6 +16,7 @@ class FraudAgent(BaseAgent):
     go directly to the exact same product ID at the exact same time 
     to buy it before the credit card gets flagged.
     """
+    agent_type: str = "fraud"
     min_gap: float = 0.5
     max_gap: float = 2.0
     target_product_id: str

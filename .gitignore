@@ -11,3 +11,4 @@ spark-warehouse/
 checkpoint/
 .spark-staging/
 .coverage
+scratch.py

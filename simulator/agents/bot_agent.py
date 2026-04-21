@@ -11,7 +11,7 @@ class BotAgent(BaseAgent):
     bot_type: str = ""
     event_counter: int = 0
     max_bot_events: int = 0
-
+    agent_type: str = "bot"
     def generate_session(self) -> list[BaseEvent]:
         self.bot_type = random.choice(["SCRAPER", "SPAMMER"])
         self.max_bot_events = random.randint(100, 500)
