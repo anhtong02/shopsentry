@@ -15,3 +15,9 @@ flash_sale:
   bots: 50
   fraud_rings: 5
   churning_users: 0
+
+mixed:
+  normal_users: 500
+  bots: 50
+  fraud_rings: 10
+  churning_users: 20
