@@ -7,16 +7,15 @@
 | 0 | 0.91      | 0.81   | 0.86     | 600     |   |   |
 | 1 | 0.37      | 0.58   | 0.45     | 112     |   |   |
 |   |           |        |          |         |   |   |
-|   |           |        |          |         |   |   |
-|   |           |        |          |         |   |   |
+
 
 - I pushed the contamination to **0.20**: 
+
 |   | precision | recall | f1-score | support |   |   |
 |---|-----------|--------|----------|---------|---|---|
 | 0 | 0.92      | 0.87   | 0.89     | 600     |   |   |
 | 1 | 0.45      | 0.57   | 0.50     | 112     |   |   |
 |   |           |        |          |         |   |   |
-|   |           |        |          |         |   |   |
-|   |           |        |          |         |   |   |
+
 It has some improvement, but you and I both know it's not getting better so lets stop here, lol.
 
