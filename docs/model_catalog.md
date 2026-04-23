@@ -17,5 +17,7 @@
 | 1 | 0.45      | 0.57   | 0.50     | 112     |   |   |
 |   |           |        |          |         |   |   |
 
-It has some improvement, but you and I both know it's not getting better so lets stop here, lol.
+It has some improvement, but you and I both know it's not getting better so lets stop here, lol. Primarily because Iso Forest can't learn complex boundaries. But it's fun to explore different models.
 
+
+## Second approach: Autoencoder
