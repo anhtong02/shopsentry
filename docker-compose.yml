@@ -65,3 +65,14 @@ services:
     image: redis:alpine
     ports:
       - "6379:6379"
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.1
+    container_name: shopsentry-mlflow
+    ports:
+    - "5000:5000"
+    command: mlflow server --host 0.0.0.0
+    volumes:
+    - mlflow-data:/mlruns
+volumes:
+  mlflow-data:
