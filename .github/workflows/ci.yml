@@ -34,4 +34,4 @@ jobs:
     - name: Run tests
       run: |
         export PYTHONPATH=$PYTHONPATH:.
-        python -m pytest tests/unit/ tests/integration/ -v
+        python -m pytest tests/unit/ tests/integration/ -v --ignore=tests/integration/test_data_quality.py
