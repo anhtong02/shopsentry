@@ -40,5 +40,8 @@ Very good, but when found recall is too good to be true, i checked for fraud and
    |--------------|------------|
    | 1.0          | 1.0        | 
 
-I splitted the data (80% train, 20% test), only trained on normal data (no anomalies), used standard scaler, I made sure there wasn't any leakage. But the reason why it's exactly 1 is because the data right now is too perfect, no noise in normal, everyone behaves the same so it's very easy to detect anomalies. Which is ok because this phase is to make everything works smoothly first.
+I splitted the data (80% train, 20% test), only trained on normal data (no anomalies), used standard scaler, I made sure there wasn't any leakage. But the reason why it's exactly 1 is because the data right now is too perfect, no noise in normal, and we have agent_type as a feature column. Which is basically a giveaway.
 
+## Third approach: XGBoost
+
+- Got all 1's. Though xgboost crushed it (with already check data leakage, split data and everything), but that was because the data was too clean. Which is good for now.

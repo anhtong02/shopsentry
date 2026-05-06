@@ -21,3 +21,9 @@ mixed:
   bots: 50
   fraud_rings: 10
   churning_users: 20
+
+mixed_large:
+  normal_users: 5000
+  bots: 500
+  fraud_rings: 100
+  churning_users: 200

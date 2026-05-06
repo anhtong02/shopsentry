@@ -6,7 +6,7 @@
 #-----------------------
 from datetime import timedelta
 from feast import Entity, FeatureView, Field, FileSource
-from feast.types import Int64, Float64
+from feast.types import Int64, Float64, String
 
 #1. Define user as entity.
 #What it does: define primary key for feature store
@@ -29,6 +29,7 @@ user_activity_v1 = FeatureView(
     entities=[session], #	Tells Feast this data is organized per user. 
     ttl=timedelta(hours=1), #data expires after 5 minutes, critical for REDIS
     schema=[ #schema enforcement
+        Field(name="session_id", dtype=String), 
         Field(name='events_per_minute', dtype=Float64), #calculate_events_per_minute
         Field(name='unique_pages_visited', dtype=Float64), #calculate_unique_pages_visited
         Field(name='avg_time_between_events', dtype=Float64), #calculate_avg_time_between_events

@@ -10,6 +10,7 @@ from pyspark.sql.types import StructType, StructField, StringType, TimestampType
 from pyspark.sql import DataFrame
 import warnings
 import time
+import pandas as pd
 
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -38,9 +39,12 @@ def main() -> None:
         .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.5") \
         .config("spark.driver.host", "127.0.0.1") \
         .config("spark.driver.bindAddress", "127.0.0.1") \
+        .config("spark.sql.shuffle.partitions", "4") \
+        .config("spark.default.parallelism", "4") \
+        .config("spark.sql.streaming.noDataMicroBatches.enabled", "false") \
         .getOrCreate()
         
-    spark.sparkContext.setLogLevel("WARN")
+    #spark.sparkContext.setLogLevel("WARN")
 
     #Purpose: A blueprint that tells Spark exactly what columns to expect in the JSON data
     #         coming from Red Panda.
@@ -104,11 +108,14 @@ def main() -> None:
         .withColumn("session_duration_seconds",
                     unix_timestamp("session_end")-unix_timestamp("session_start")) \
         .withColumn("events_per_minute",
-                    col("event_count") / ((col("session_duration_seconds") + 0.001)/60))\
+                    when(col("session_duration_seconds") < 1, 0.0)
+                    .otherwise(col("event_count") / (col("session_duration_seconds")/60)))\
         .withColumn("avg_time_between_events",
-                    col("session_duration_seconds") / (col("event_count") - 1 +0.001)) \
+                    when(col("event_count") <= 1, 0.0)
+                    .otherwise(col("session_duration_seconds") / (col("event_count") - 1 ))) \
         .withColumn("cart_to_purchase_ratio",
-                    col("payment_count") / col("cart_count") +0.001)\
+                    when(col("cart_count") == 0, 0.0)
+                    .otherwise(col("payment_count") / col("cart_count")))\
         .withColumn("has_payment",
                 when(col("payment_count") > 0, 1).otherwise(0)) \
         .withColumn("signup_to_purchase_speed",
@@ -119,26 +126,35 @@ def main() -> None:
                     when(col("pageview_count")==0, 0.0)
                     .otherwise(1-(col("unique_pages_visited") / col("pageview_count"))))
 
+    store = FeatureStore(repo_path="feature_repo/feature_repo")
 
     # --- THE BRIDGE TO FEAST ---
     # This function runs every time Spark finishes a 10-second math batch
     # --- THE BRIDGE TO FEAST & PARQUET ---
     def write_to_feast(batch_df: DataFrame, batch_id: int) -> None:
-        start = time.time()
-        pdf = batch_df.toPandas()
-        
-        if not batch_df.isEmpty():
-            # 1. Push to Redis (Online Store for Real-Time)
-            store = FeatureStore(repo_path="feature_repo/feature_repo")
-            store.write_to_online_store(feature_view_name="session_features", df=pdf)
-            
-            # 2. Push to Parquet (Offline Store for Training/Testing)
-            # This satisfies your syllabus requirement!
-            batch_df.write.mode("append").parquet("feature_repo/feature_repo/data/offline_features")
-            
-            print(f"✅ Pushed {len(pdf)} profiles to Redis AND Parquet!")
-            print(f"✅ Batch {batch_id}: {len(pdf)} rows in {time.time() - start:.2f}s")
+        if batch_df.isEmpty():
+            return
 
+        start = time.time()
+
+        # Collect rows as dicts — skips Spark's heavy toPandas() path
+        rows = batch_df.collect()
+        pdf = pd.DataFrame([row.asDict() for row in rows])
+        t1 = time.time()
+
+        store.write_to_online_store(feature_view_name="session_features", df=pdf)
+        t2 = time.time()
+
+        # Write Parquet from Pandas — skips Spark's write overhead
+        output_path = f"feature_repo/feature_repo/data/offline_features/batch_{batch_id}.parquet"
+        pdf.to_parquet(output_path, index=False)
+        t3 = time.time()
+
+        print(f"Batch {batch_id}: {len(pdf)} rows | "
+            f"collect={t1-start:.2f}s | "
+            f"Redis={t2-t1:.2f}s | "
+            f"Parquet={t3-t2:.2f}s | "
+            f"total={t3-start:.2f}s")
     # ---------------------------
     # ---------------------------
 

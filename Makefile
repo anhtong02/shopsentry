@@ -29,7 +29,8 @@ normal:
 
 mixed:
 	python -m simulator.run --scenario mixed
-
+mixedL:
+	python -m simulator.run --scenario mixed_large
 
 inspect:
 	python tests/integration/test_data_quality.py
@@ -39,7 +40,13 @@ apply:
 
 activate:
 	.venv\Scripts\activate
+
+mlflow:
+	mlflow server --host 0.0.0.0 --port 5000
 # ---------------------------
 
+
+iso:
+	python -m models.anomaly.isolation_forest
 clean: 
 	-powershell -Command "Remove-Item -Recurse -Force __pycache__, .pytest_cache, .mypy_cache, .ruff_cache -ErrorAction Ignore"

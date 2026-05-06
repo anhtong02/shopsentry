@@ -6,9 +6,56 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-feature_repo/feature_repo/data/
 spark-warehouse/
 checkpoint/
 .spark-staging/
 .coverage
 scratch.py
+dbscan_errors.png
+dbscan_vs_truth.png
+eda_correlation.png
+eda_distributions.png
+eda_pairplot.png
+eda_pca.png
+eda_tsne.png
+models\data
+data/
+
+mlruns/
+mlflow_artifacts/
+feature_repo/feature_repo/data/
+data/pseudo_labels_*.parquet
+.pytest_cache/
+*.egg-info
+docs/image.png
+
+@'
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+
+# MLflow
+mlruns/
+mlartifacts/
+mlflow_artifacts/
+
+# Data
+feature_repo/feature_repo/data/
+data/pseudo_labels_*.parquet
+*.parquet
+
+# Logs and OS
+*.log
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# EDA outputs (regenerable)
+eda_*.png
+dbscan_*.png
+'@ | Out-File -FilePath .gitignore -Encoding utf8
