@@ -21,12 +21,12 @@ from models.classifiers.xgboost_classifier import XGBoostClassifier
 import mlflow.tensorflow
 import mlflow.sklearn
 import mlflow.xgboost
+from typing import Callable
 
-LABELER_REGISTRY: dict[str, type[BaseLabeler]] = {
+LABELER_REGISTRY: dict[str, Callable[[], BaseLabeler]] = {
     "isoforest": IsoForestLabeler,
     "autoencoder": AutoencoderLabeler,
     "autoencoder_contaminated": lambda: AutoencoderLabeler(train_on_normal_only=False),
-
     "heuristic": HeuristicLabeler,
 }
 
@@ -66,10 +66,10 @@ def run_one(name: str, labeler: BaseLabeler, df: pd.DataFrame, feature_cols: lis
         mlflow.log_param("scale_pos_weight", metrics["scale_pos_weight"])
     
         # Log labeler artifacts (autoencoder + scaler)
-        if hasattr(labeler, "_fitted_model"):
-            mlflow.tensorflow.log_model(labeler._fitted_model, artifact_path="autoencoder")
-            mlflow.sklearn.log_model(labeler._fitted_scaler, artifact_path="scaler")
-            mlflow.log_param("anomaly_threshold", labeler._threshold)
+        if hasattr(labeler, "_fitted_model") and hasattr(labeler, "_fitted_scaler"):
+            mlflow.tensorflow.log_model(labeler._fitted_model, artifact_path="autoencoder")  # type: ignore[attr-defined]
+            mlflow.sklearn.log_model(labeler._fitted_scaler, artifact_path="scaler")  # type: ignore[attr-defined]
+            mlflow.log_param("anomaly_threshold", labeler._threshold)  # type: ignore[attr-defined]
     
         # Log XGBoost model
         if clf.model is not None:

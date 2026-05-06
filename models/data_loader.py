@@ -12,7 +12,7 @@ feature_cols = [
     "page_revisit_ratio"
 ]
 
-def load_training_data():
+def load_training_data() -> tuple[pd.DataFrame, list[str]]:
     df = pd.read_parquet("feature_repo/feature_repo/data/offline_features")
     df["label"] = df["agent_type"].apply(lambda x: 1 if x in ["bot", "fraud"] else 0)
     df[feature_cols] = df[feature_cols].fillna(0)

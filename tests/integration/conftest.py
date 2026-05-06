@@ -5,15 +5,12 @@ docker, MLflow, Redis, or a populated feature store. This is the
 standard pattern for unit/integration testing FastAPI services.
 """
 from unittest.mock import MagicMock
-
-import numpy as np
 import pytest
-from fastapi.testclient import TestClient
-
 from api.feast_client import DEFAULT_FEATURES, FeastClient
 from api.main import app
 from api.model_loader import LoadedModels
-
+from typing import Generator
+from fastapi.testclient import TestClient
 
 @pytest.fixture
 def mock_models() -> LoadedModels:
@@ -42,19 +39,16 @@ def mock_feast_unavailable() -> FeastClient:
 
 
 @pytest.fixture
-def client(mock_models, mock_feast_with_data) -> TestClient:
-    """TestClient with happy-path mocks. Lifespan runs but we override state after."""
+def client(mock_models: LoadedModels, mock_feast_with_data: FeastClient) -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
-        # Override after lifespan fires (lifespan runs on context entry)
-        c.app.state.models = mock_models
-        c.app.state.feast = mock_feast_with_data
+        c.app.state.models = mock_models  # type: ignore[attr-defined]
+        c.app.state.feast = mock_feast_with_data  # type: ignore[attr-defined]
         yield c
 
 
 @pytest.fixture
-def client_feast_down(mock_models, mock_feast_unavailable) -> TestClient:
-    """Same as client but Feast lookups all return defaults."""
+def client_feast_down(mock_models: LoadedModels, mock_feast_unavailable: FeastClient) -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
-        c.app.state.models = mock_models
-        c.app.state.feast = mock_feast_unavailable
+        c.app.state.models = mock_models  # type: ignore[attr-defined]
+        c.app.state.feast = mock_feast_unavailable  # type: ignore[attr-defined]
         yield c

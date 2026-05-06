@@ -1,8 +1,9 @@
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 import mlflow
-from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.metrics import classification_report
 from models.data_loader import load_training_data
+import pandas as pd
 
 
 mlflow.set_tracking_uri("http://localhost:5000")
@@ -22,6 +23,5 @@ predictions = xg.predict(X_test)
 
 print(classification_report(y_test, predictions))
 
-import pandas as pd
 importance = pd.DataFrame({"feature": feature_cols, "importance": xg.feature_importances_})
 print(importance.sort_values("importance", ascending=False))

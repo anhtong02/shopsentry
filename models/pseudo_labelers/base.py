@@ -23,7 +23,7 @@ class BaseLabeler(ABC):
         """
         pass
  
-    def save(self, df: pd.DataFrame, path: str = None) -> str:
+    def save(self, df: pd.DataFrame, path: str | None = None) -> str:
         """Save pseudo-labels to parquet for downstream classifiers."""
         path = path or f"data/pseudo_labels_{self.name}.parquet"
         df.to_parquet(path, index=False)

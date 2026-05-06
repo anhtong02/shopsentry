@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 import numpy as np
 from fastapi import FastAPI, HTTPException, Request
-
+from typing import AsyncIterator
 from api.feast_client import FeastClient
 from api.model_loader import FEATURE_ORDER, LoadedModels, load_from_registry
 from api.observability import (
@@ -17,13 +17,15 @@ from api.observability import (
     router as observability_router,
 )
 from api.schemas import PredictRequest, PredictResponse, SessionFeatures
-
+from typing import Awaitable, Callable
+from fastapi import Response
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+
     logger.info("Loading models from MLflow Registry...")
     app.state.models = load_from_registry()
     MODEL_LOADED.set(1)
@@ -44,7 +46,10 @@ app.include_router(observability_router)
 
 
 @app.middleware("http")
-async def track_metrics(request: Request, call_next):
+async def track_metrics(
+    request: Request,
+    call_next: Callable[[Request], Awaitable[Response]],
+) -> Response:
     """Wraps every request: times it, counts it, exposes via /metrics."""
     start = time.perf_counter()
     endpoint = request.url.path
@@ -62,7 +67,7 @@ async def track_metrics(request: Request, call_next):
 
 
 @app.get("/")
-def root() -> dict:
+def root() -> dict[str, str]:
     return {"service": "shopsentry", "version": "0.4.0"}
 
 

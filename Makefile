@@ -1,11 +1,11 @@
 .PHONY: test lint fmt up down spark attack normal inspect apply clean
 
 test:
-	python -m pytest tests/unit/ -v
+	python -m pytest tests/unit/ tests/integration/ -v
 
 lint:
 	ruff check .
-	mypy simulator pipeline tests --install-types --non-interactive
+	mypy simulator pipeline tests api models --install-types --non-interactive
 
 fmt:
 	ruff format .
@@ -50,3 +50,14 @@ iso:
 	python -m models.anomaly.isolation_forest
 clean: 
 	-powershell -Command "Remove-Item -Recurse -Force __pycache__, .pytest_cache, .mypy_cache, .ruff_cache -ErrorAction Ignore"
+
+#-----week 4-5-----
+
+api:
+	uvicorn api.main:app --port 8000 --workers 4
+
+pipeline:
+	python -m models.run_pipeline
+
+load-test:
+	locust -f load_tests/locustfile.py --host http://localhost:8000 --users 100 --spawn-rate 20 --run-time 60s --headless

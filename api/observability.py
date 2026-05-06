@@ -1,5 +1,4 @@
 import logging
-import time
 import redis
 from fastapi import APIRouter, Request, Response
 from prometheus_client import (

@@ -1,22 +1,23 @@
+# mypy: disable-error-code="no-untyped-def"
+
+
 """Integration tests for the prediction API.
 
 These use FastAPI's TestClient — same code path as production but in-process.
 Models and Feast are mocked so tests run anywhere (no docker required).
 """
-import pytest
-
 
 # ============================================================
 # Happy path
 # ============================================================
 
-def test_root_returns_service_info(client):
+def test_root_returns_service_info(client)-> None:
     r = client.get("/")
     assert r.status_code == 200
     assert r.json()["service"] == "shopsentry"
 
 
-def test_predict_with_explicit_features_returns_score(client):
+def test_predict_with_explicit_features_returns_score(client)-> None:
     r = client.post(
         "/predict/anomaly",
         json={
@@ -42,14 +43,14 @@ def test_predict_with_explicit_features_returns_score(client):
     assert body["model_version"] == "test_classifier:v1"
 
 
-def test_predict_with_session_id_only_does_feast_lookup(client, mock_feast_with_data):
+def test_predict_with_session_id_only_does_feast_lookup(client, mock_feast_with_data)-> None:
     r = client.post("/predict/anomaly", json={"session_id": "looked_up_session"})
     assert r.status_code == 200
     # Verify Feast was actually called
     mock_feast_with_data.get_features.assert_called_once_with("looked_up_session")
 
 
-def test_predict_returns_anomaly_when_model_says_so(client, mock_models):
+def test_predict_returns_anomaly_when_model_says_so(client, mock_models)-> None:
     mock_models.predict.return_value = (0.95, True)
     r = client.post(
         "/predict/anomaly",
@@ -78,7 +79,7 @@ def test_predict_returns_anomaly_when_model_says_so(client, mock_models):
 # Bad input — Pydantic validation
 # ============================================================
 
-def test_predict_rejects_negative_feature(client):
+def test_predict_rejects_negative_feature(client)-> None:
     r = client.post(
         "/predict/anomaly",
         json={"features": {"events_per_minute": -5}},  # ge=0 should reject
@@ -86,7 +87,7 @@ def test_predict_rejects_negative_feature(client):
     assert r.status_code == 422
 
 
-def test_predict_rejects_missing_required_field(client):
+def test_predict_rejects_missing_required_field(client)-> None:
     r = client.post(
         "/predict/anomaly",
         json={"features": {"events_per_minute": 5}},  # other fields missing
@@ -94,7 +95,7 @@ def test_predict_rejects_missing_required_field(client):
     assert r.status_code == 422
 
 
-def test_predict_rejects_invalid_has_payment_value(client):
+def test_predict_rejects_invalid_has_payment_value(client)-> None:
     r = client.post(
         "/predict/anomaly",
         json={
@@ -114,7 +115,7 @@ def test_predict_rejects_invalid_has_payment_value(client):
     assert r.status_code == 422
 
 
-def test_predict_rejects_empty_request(client):
+def test_predict_rejects_empty_request(client)-> None:
     r = client.post("/predict/anomaly", json={})
     # No session_id, no features → 400
     assert r.status_code == 400
@@ -124,7 +125,7 @@ def test_predict_rejects_empty_request(client):
 # Graceful degradation — Feast/Redis down
 # ============================================================
 
-def test_predict_works_when_feast_returns_defaults(client_feast_down):
+def test_predict_works_when_feast_returns_defaults(client_feast_down)-> None:
     """When Feast can't find a session, defaults are used and prediction still works."""
     r = client_feast_down.post(
         "/predict/anomaly",
@@ -140,7 +141,7 @@ def test_predict_works_when_feast_returns_defaults(client_feast_down):
 # Observability endpoints
 # ============================================================
 
-def test_health_returns_status(client):
+def test_health_returns_status(client)-> None:
     r = client.get("/health")
     # 200 = ok, 503 = degraded — both acceptable depending on Redis state
     assert r.status_code in (200, 503)
@@ -150,7 +151,7 @@ def test_health_returns_status(client):
     assert "model" in body["checks"]
 
 
-def test_metrics_endpoint_returns_prometheus_format(client):
+def test_metrics_endpoint_returns_prometheus_format(client)-> None:
     # Hit the API once first so counters are non-zero
     client.post(
         "/predict/anomaly",

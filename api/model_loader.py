@@ -1,11 +1,10 @@
 import logging
-import os
 from dataclasses import dataclass
 import mlflow
 import mlflow.sklearn
 import mlflow.xgboost
 import numpy as np
-from mlflow.tracking import MlflowClient
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +22,8 @@ FEATURE_ORDER = [
 
 @dataclass
 class LoadedModels:
-    scaler: object
-    classifier: object
+    scaler: Any
+    classifier: Any
     classifier_version: str
 
     def predict(self, features: np.ndarray) -> tuple[float, bool]:
