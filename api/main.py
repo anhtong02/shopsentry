@@ -2,7 +2,7 @@
 import logging
 import time
 from contextlib import asynccontextmanager
-
+import os
 import numpy as np
 from fastapi import FastAPI, HTTPException, Request
 from typing import AsyncIterator
@@ -25,7 +25,11 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-
+    if os.getenv("SHOPSENTRY_TEST_MODE") == "1":
+        logger.info("Test mode — skipping model/Feast load")
+        yield
+        return
+    
     logger.info("Loading models from MLflow Registry...")
     app.state.models = load_from_registry()
     MODEL_LOADED.set(1)

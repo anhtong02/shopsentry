@@ -4,6 +4,8 @@ We use TestClient with mocked models/Feast so tests don't require
 docker, MLflow, Redis, or a populated feature store. This is the
 standard pattern for unit/integration testing FastAPI services.
 """
+import os
+os.environ["SHOPSENTRY_TEST_MODE"] = "1"
 from unittest.mock import MagicMock
 import pytest
 from api.feast_client import DEFAULT_FEATURES, FeastClient
