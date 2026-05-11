@@ -26,7 +26,6 @@ feature_repo/feature_repo/data/
 data/pseudo_labels_*.parquet
 .pytest_cache/
 *.egg-info
-docs/image.png
 
 @'
 # Python
