@@ -1,4 +1,15 @@
-"""Feast online store client. Fetches session features from Redis."""
+"""Feast online store client. 
+the client sends session id, feast looks up the 9 features from Redis.
+
+the request might not even contain features at all, do feast fetches the default values.
+
+when feast and redis returns no data for a session id, many causes can be:
+1. spark is down
+2. redis is down
+3. the sessions id doesnt exist
+4. 1 hour ttl expired
+
+Fetches session features from Redis."""
 import logging
 from pathlib import Path
 
@@ -20,6 +31,8 @@ FEATURE_REFS = [
 
 # Default values when Feast/Redis is down — biased toward "looks normal"
 # so we don't generate false-positive anomaly alerts during outages.
+
+#tradeoff: silent failure is also dangerous, bots and frauds can get a free pass.
 DEFAULT_FEATURES = {
     "events_per_minute": 5.0,
     "unique_pages_visited": 3.0,

@@ -84,6 +84,7 @@ def main() -> None:
         .select(from_json(col("json_payload"), event_schema).alias("data")) \
         .select("data.*")
 
+    #wait 1 min for late events before closing a window
     aggregated = parsed_stream \
         .withWatermark("timestamp", "1 minute") \
         .groupBy("session_id") \

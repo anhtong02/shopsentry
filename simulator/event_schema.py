@@ -5,6 +5,21 @@ from typing import Optional, Type, Dict, Any
 from uuid import uuid4
 from pydantic import BaseModel, Field
 
+ 
+"""
+This file defines the schema of events so when user performs an event,
+it follows the structure to ensure consistency.
+
+These are the places that an events could exist:
+1. Simulator
+2. Sent over the network to Redpanda
+3. Read by Spark
+4. test, logs, etc
+
+So thats why consistency helps.
+"""
+
+
 # 1. Define the Enum
 class EventType(str, Enum):
     PAGEVIEW = "pageview"
@@ -33,7 +48,6 @@ class BaseEvent(BaseModel):
         return cls(**obj_dict)
 
 # --- Subclasses ---
-
 class PageViewEvent(BaseEvent):
     event_type: EventType = EventType.PAGEVIEW
     url: str = "https://example.com"

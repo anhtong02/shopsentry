@@ -6,6 +6,12 @@ from simulator.event_schema import (
     CheckoutEvent, PaymentEvent, UserSignupEvent, ProductViewEvent
 )
 
+
+"""
+state machine: LANDING → SIGNUP/BROWSING → SEARCHING/VIEW_PROD/EXIT 
+→ checkout flow → EXIT. 
+Probabilities (random.choices with weights) decide transitions.
+"""
 class NormalUser(BaseAgent):
     def generate_event(self) -> BaseEvent:
         # 1. LANDING -> SIGNUP or BROWSING

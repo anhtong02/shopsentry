@@ -5,6 +5,13 @@ from simulator.event_schema import BaseEvent
 from datetime import datetime, timezone, timedelta
 import random
 
+"""
+Abstract base class to define shared state every agent has.
+Also defines generate_session() which keeps generating events until agents exist.
+"""
+
+
+
 def generate_random_ip() -> str:
     """Generates a realistic-looking public IPv4 address."""
     # Skipping 10.x.x.x and 192.168.x.x local blocks for realism

@@ -9,6 +9,13 @@ from prometheus_client import (
     generate_latest
 )
 
+"""
+Purpose:
+1. Defines prometheus metrics
+2. Defines 2 endpoints:
+ i. /health: check if model is loaded, redis/ feast is up? returns 200 or 503
+ ii. /metrics: take metrics in Prometheus format
+"""
 logger = logging.getLogger(__name__)
 router = APIRouter()
 

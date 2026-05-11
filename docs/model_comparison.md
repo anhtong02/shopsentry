@@ -61,27 +61,12 @@ The heuristic remains in the ensemble as a complementary signal.
 ## Limitations 
 Simulator agents are deterministic. All bots have events_per_minute between 50-120. All fraud rings have 4-second checkout sessions. Real fraud has within-class variance my data doesn't capture. Phase 1 introduces evasive agents to address this.
 **No cross-session features**. Fraud rings share IP subnets and target the same product across "different" users. None of my 9 per-session features capture this. IF's 27% fraud recall reflects this gap. Phase 3 plan: add subnet_session_count, product_concentration features.
-**Heuristics derived from EDA on the same dataset**. Mild form of label leakage — I picked thresholds after seeing the data. In production, heuristics come from SMEs before model training.
-**Class imbalance not extreme enough**. Real fraud is 0.1-2% of traffic; my simulator runs at 12%. Models would face harder precision/recall tradeoffs at production rates.
+**Heuristics derived from EDA on the same dataset**. This is a kind of a label leakage because I picked thresholds after seeing the data. 
+**Class imbalance not extreme enough**. my simulator runs at 12% which is a bit much which makes it easier to detect anomaly
 
 ## What I'd Do Differently With More Time
+1. Phase 2: Build bots that are below detection thresholds, fraud rings that browse legitimately before striking, accounts that act like normal before attacking. 
+2. Cross-session features. Add platform-level features to detect fraud rings: shared IP subnets, simultaneous product targeting, user signup-to-purchase velocity across many accounts.
+3. Analyst feedback loop simulation. Replay a delayed-label scenario where labels arrive 7 days post-prediction (mirrors real chargeback feedback). Measure how much faster the model can catch new fraud patterns with feedback vs without.
 
-Survival analysis for churn prediction as a separate secondary model (week 4 stretch goal)
-Cross-session features for fraud ring detection
-Time-windowed evaluation to test concept drift handling
-Analyst feedback loop simulation — replay a delayed-label scenario where labels arrive 7 days after the prediction
 
-Threshold Selection
-Autoencoder threshold set at 95th percentile of validation reconstruction errors. Tradeoff:
-
-95% → ~5% false positive rate on legitimate users, near-100% recall on simulated anomalies
-99% → fewer FPs but misses subtle anomalies
-90% → catches everything but ~10% FP rate (analyst review burden)
-
-For the demo I chose 95%; in production this should be tuned against business cost-per-FP and cost-per-FN.
-Reproducibility
-bashdocker compose up -d              # MLflow, Redis, Redpanda, Spark
-python -m simulator.run --scenario mixed_large
-# wait for Spark to drain
-python -m models.run_pipeline
-All runs logged to MLflow at http://localhost:5000, experiment anomaly_detection_pipeline.

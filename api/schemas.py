@@ -1,5 +1,9 @@
 ﻿from pydantic import BaseModel, Field
-
+"""
+Defines the shape of request and response data.
+Validate request.
+Auto reject the bad json requests
+"""
 
 class SessionFeatures(BaseModel):
     events_per_minute: float = Field(..., ge=0)
@@ -13,6 +17,9 @@ class SessionFeatures(BaseModel):
     page_revisit_ratio: float = Field(..., ge=0, le=1)
 
 
+"""
+blueprint for what request body looks like
+"""
 class PredictRequest(BaseModel):
     session_id: str | None = None
     features: SessionFeatures | None = None
