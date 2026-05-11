@@ -16,7 +16,6 @@ dbscan_vs_truth.png
 eda_correlation.png
 eda_distributions.png
 eda_pairplot.png
-eda_pca.png
 eda_tsne.png
 models\data
 data/
