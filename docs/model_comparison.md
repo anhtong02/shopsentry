@@ -34,7 +34,7 @@ To detect anomaly from user sessions.
 This one catches volume-based anomalies (bots) easily but struggles with dense small clusters. Fraud sessions form a tight cluster which iso forest sees them as normal because they have many similiar points. Confirmed via PCA visualization: fraud cluster is clearly separated, IF still misses it. 
 Use case: quick baseline, exploratory anomaly detection, not for production alone.
 
-![PCA visualization](image.png)
+![PCA visualization](eda_pca.png)
 
 ### Autoencoder
 Trained only on normal sessions, so that anomalies fail to reconstruct. Mean reconstruction error: normal=0.13, bot=33, fraud=57 — extreme separation. 
