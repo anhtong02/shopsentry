@@ -57,3 +57,5 @@ data/pseudo_labels_*.parquet
 eda_*.png
 dbscan_*.png
 '@ | Out-File -FilePath .gitignore -Encoding utf8
+mlflow.db
+.gitignore

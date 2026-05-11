@@ -1,4 +1,5 @@
 # ShopSentry
+![CI](https://github.com/anhtong02/shopsentry/actions/workflows/ci.yml/badge.svg)
 
 ## What is it
 It's a real time anomaly detector for simulated e-commerce event streams. It detects bot traffic and fraud rings using a full ML pipeline: simulated traffic -> streaming feature engineering -> multi model evaluation -> serve the best model with observability
@@ -37,6 +38,9 @@ It's a real time anomaly detector for simulated e-commerce event streams. It det
                                                         └────────────────┘
 ```
 
+
+
+
 ## Results
  
 ### Model comparison
@@ -57,7 +61,7 @@ Distributed test: Locust on macOS hitting FastAPI on Windows over LAN, 16 uvicor
  
 | Concurrent users | p50 | p95 | p99 | RPS |
 |---|---|---|---|---|
-| 20 | **32 ms** | 88 ms | 160 ms | ~190 |
+| 20 | 32 ms | 88 ms | 160 ms | ~190 |
 | 30 | 60 ms | 150 ms | 240 ms | ~240 |
 | 50 | 83 ms | 190 ms | 260 ms | ~295 |
  
@@ -149,15 +153,15 @@ shopsentry/
 
 ## Limitations
 
-This is **phase 1**. The simulator's agents are obvious, which makes the detection problem easier than real life fraud based on the fact that i created them like this:
+This is phase 1. The simulator's agents are obvious, which makes the detection problem easier than real life fraud based on the fact that i created them like this:
  
 - Bots make 50-120 events/min consistently
 - Fraud rings acts immediately on session 1
 - Only session-level features → fraud rings detected per-session, not as groups
 
-**Phase 2 (planned):** introduce evasive agents — throttled bots, fraud rings that browse before striking, account aging, IP rotation with realistic geo distribution. This should make F1 scores of every model drops. Then build phase 3 fixes (heuristics, cross-session features, ensemble re-weighting).
+Phase 2: introduce evasive agents where they "blend" into normal but still have a bot-like behaviour. This should make F1 scores of every model drops. Then build phase 3 fixes (to be figured out later).
  
-That phase 2 → phase 3 arc is the project I actually want to build. Phase 1 is the platform that makes that experiment possible.
+That phase 2 & phase 3  is the challenge I actually want to try. Phase 1 is the platform that makes that experiment possible and to learn and get hands on with industry standard tools as a fresh grad.
  
 ## Read more
  
