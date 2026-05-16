@@ -22,7 +22,8 @@ import mlflow.tensorflow
 import mlflow.sklearn
 import mlflow.xgboost
 from typing import Callable
-
+from mlflow.models.signature import infer_signature
+import numpy as np
 LABELER_REGISTRY: dict[str, Callable[[], BaseLabeler]] = {
     "isoforest": IsoForestLabeler,
     "autoencoder": AutoencoderLabeler,
@@ -73,7 +74,10 @@ def run_one(name: str, labeler: BaseLabeler, df: pd.DataFrame, feature_cols: lis
     
         # Log XGBoost model
         if clf.model is not None:
-            mlflow.xgboost.log_model(clf.model, artifact_path="xgboost")
+            sample_input = np.zeros((1, len(feature_cols)))
+            sample_output = clf.model.predict(sample_input)
+            sig = infer_signature(sample_input, sample_output)
+            mlflow.xgboost.log_model(clf.model, name="xgboost", signature=sig)
     
         for k in ("labeler_precision", "labeler_recall", "labeler_f1"):
             mlflow.log_metric(k, label_quality[k])

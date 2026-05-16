@@ -29,9 +29,10 @@ class AutoencoderLabeler(BaseLabeler):
         self.epochs = epochs
         self.batch_size = batch_size
         self.random_state = random_state
-        tf.keras.utils.set_random_seed(random_state)
+        tf.keras.utils.set_random_seed(self.random_state)
 
     def fit_predict(self, df: pd.DataFrame, feature_cols: list[str]) -> pd.DataFrame:
+        tf.keras.utils.set_random_seed(self.random_state)
         # CRITICAL: only train on rows we BELIEVE are normal.
         # In production with no labels, you'd assume the bulk of traffic is normal
         # and accept some contamination. Here we use the simulator's labels for

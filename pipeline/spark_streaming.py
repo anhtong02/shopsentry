@@ -109,8 +109,8 @@ def main() -> None:
         .withColumn("session_duration_seconds",
                     unix_timestamp("session_end")-unix_timestamp("session_start")) \
         .withColumn("events_per_minute",
-                    when(col("session_duration_seconds") < 1, 0.0)
-                    .otherwise(col("event_count") / (col("session_duration_seconds")/60)))\
+            when(col("event_count") <= 1, 0.0)  # only zero out single-event sessions
+            .otherwise(col("event_count") / (col("session_duration_seconds")/60 + 0.001)))\
         .withColumn("avg_time_between_events",
                     when(col("event_count") <= 1, 0.0)
                     .otherwise(col("session_duration_seconds") / (col("event_count") - 1 ))) \
