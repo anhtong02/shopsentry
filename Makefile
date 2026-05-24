@@ -53,7 +53,7 @@ clean:
 
 #-----week 4-5-----
 
-api:
+uvi:
 	uvicorn api.main:app --port 8000 --workers 4
 
 pipeline:
@@ -61,3 +61,6 @@ pipeline:
 
 load-test:
 	locust -f load_tests/locustfile.py --host http://localhost:8000 --users 100 --spawn-rate 20 --run-time 60s --headless
+
+demo200:
+	python -m demo.live_predict --shuffle --speed 0.02 --max 200

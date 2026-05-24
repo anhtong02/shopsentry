@@ -32,12 +32,12 @@ class LoadedModels:
         # XGBClassifier.predict_proba returns shape (n, 2): [P(normal), P(anomaly)]
         proba = self.classifier.predict_proba(scaled)
         anomaly_score = float(proba[0, 1])
-        return anomaly_score, anomaly_score > 0.05
+        return anomaly_score, anomaly_score > 0.5
 
 def load_from_registry(
         classifier_name: str = "shopsentry_classifier",
         scaler_name: str = "shopsentry_scaler",
-        version: str = "4",
+        version: str = "6",
         tracking_uri: str = "http://localhost:5000",
 ) -> LoadedModels:
         
