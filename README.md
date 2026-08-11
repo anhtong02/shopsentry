@@ -1,6 +1,4 @@
 # ShopSentry
-![CI](https://github.com/anhtong02/shopsentry/actions/workflows/ci.yml/badge.svg)
-
 ## What is it
 It's a real time anomaly detector for simulated e-commerce event streams. It detects bot traffic and fraud rings using a full ML pipeline: simulated traffic -> streaming feature engineering -> multi model evaluation -> serve the best model with observability
 
