@@ -1,4 +1,10 @@
-"""Autoencoder pseudo-labeler. Trains on normal-only, flags high reconstruction error."""
+"""Autoencoder pseudo-labeler. Flags sessions with high reconstruction error.
+
+Modes:
+- Semi-supervised (default): trains on a small sample of verified-normal sessions,
+  mimicking a real "known good customers" list.
+- Label-free (train_on_normal_only=False): trains on all sessions, no labels used.
+"""
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -20,8 +26,11 @@ class AutoencoderLabeler(BaseLabeler):
         batch_size: int = 32,
         random_state: int = 1,
         train_on_normal_only: bool = True,
+        verified_sample: int | None = 500,
     ):
         self.train_on_normal_only = train_on_normal_only
+        # How many verified-normal sessions to train on (None = all normals)
+        self.verified_sample = verified_sample
         self.name = "autoencoder" if train_on_normal_only else "autoencoder_contaminated"
         self.bottleneck_dim = bottleneck_dim
         self.threshold_percentile = threshold_percentile
@@ -37,11 +46,16 @@ class AutoencoderLabeler(BaseLabeler):
 
     # ---------- NEW: separate fit and predict ----------
     def fit(self, df: pd.DataFrame, feature_cols: list[str]) -> None:
-        """Train autoencoder on (normal-only) data. Sets internal state."""
+        """Train autoencoder. Semi-supervised mode uses a small verified-normal sample."""
         tf.keras.utils.set_random_seed(self.random_state)
 
         if self.train_on_normal_only:
             train_pool = df[df["label"] == 0]
+            if self.verified_sample:
+                train_pool = train_pool.sample(
+                    min(self.verified_sample, len(train_pool)),
+                    random_state=self.random_state,
+                )
         else:
             train_pool = df
 
