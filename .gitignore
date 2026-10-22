@@ -59,3 +59,11 @@ dbscan_*.png
 '@ | Out-File -FilePath .gitignore -Encoding utf8
 mlflow.db
 .gitignore
+docs/screenshots/yelp-p5-1.png
+docs/screenshots/yelp-p4-1.png
+docs/screenshots/yelp-p3-1.png
+docs/screenshots/yelp-p2-3.png
+docs/screenshots/yelp-p2-2.png
+docs/screenshots/yelp-p2-1.png
+docs/screenshots/yelp-p1-2.png
+docs/screenshots/yelp-p1-1.png

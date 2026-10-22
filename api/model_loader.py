@@ -37,7 +37,7 @@ class LoadedModels:
 def load_from_registry(
         classifier_name: str = "shopsentry_classifier",
         scaler_name: str = "shopsentry_scaler",
-        version: str = "6",
+        version: str = "7",
         tracking_uri: str = "http://localhost:5000",
 ) -> LoadedModels:
         
