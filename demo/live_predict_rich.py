@@ -11,6 +11,10 @@ Usage (API running on localhost:8000):
     python -m demo.live_predict_rich
     python -m demo.live_predict_rich --shuffle --max 300 --speed 0.03
     python -m demo.live_predict_rich --via feast      # look up features in Redis by session_id
+    python -m demo.live_predict_rich --data all       # replay every session, incl. training ones
+
+By default it replays only held-out sessions (the 30% test split the served
+model never trained on), so the scoreboard reflects unseen data.
 
 By default it sends the session's features directly, so only the API (and MLflow,
 for model loading) need to be running. --via feast also needs Redis + Feast.
@@ -32,6 +36,7 @@ from rich.table import Table
 from rich.text import Text
 
 from models.data_loader import feature_cols, load_training_data
+from models.holdout import holdout_sessions
 
 session = requests.Session()
 ANOMALY_TYPES = ("bot", "fraud")
@@ -168,10 +173,17 @@ def main() -> None:
     parser.add_argument("--max", type=int, default=300, help="Sessions to stream")
     parser.add_argument("--via", choices=["features", "feast"], default="features",
                         help="Send features directly, or look them up in Feast by session_id")
+    parser.add_argument("--data", choices=["holdout", "all"], default="holdout",
+                        help="holdout = only sessions the model never trained on (default); all = every session")
     args = parser.parse_args()
 
     with console.status("[cyan]Loading sessions..."):
         df, _ = load_training_data()
+        if args.data == "holdout":
+            df, source = holdout_sessions(df)
+            console.print(f"[cyan]Replaying {len(df)} held-out sessions the model never trained on ({source}).[/]")
+        else:
+            console.print("[yellow]Replaying ALL sessions, including ones the model trained on. Scores will look optimistic.[/]")
         if args.shuffle:
             df = df.sample(frac=1).reset_index(drop=True)
         df = df.head(args.max)

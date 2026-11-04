@@ -22,6 +22,7 @@ from models.pseudo_labelers.autoencoder_labeler import AutoencoderLabeler
 from models.pseudo_labelers.heuristic_labeler import HeuristicLabeler
 from models.pseudo_labelers.ensemble import EnsembleLabeler
 from models.classifiers.xgboost_classifier import XGBoostClassifier
+from models.holdout import save_holdout_ids, split_train_holdout
 import mlflow.tensorflow
 import mlflow.sklearn
 import mlflow.xgboost
@@ -52,7 +53,14 @@ def run_one(name: str, labeler: BaseLabeler, df: pd.DataFrame, feature_cols: lis
     """Original single-split path."""
     print(f"\n{'='*60}\nLABELER: {name}\n{'='*60}")
 
-    labeled_df = labeler.fit_predict(df, feature_cols)
+    if hasattr(labeler, "fit") and hasattr(labeler, "predict"):
+        # Fit on the training split only, then label every session. Otherwise the
+        # autoencoder's verified-normal sample could include held-out test sessions.
+        train_df, _ = split_train_holdout(df)
+        labeler.fit(train_df, feature_cols)
+        labeled_df = labeler.predict(df)
+    else:
+        labeled_df = labeler.fit_predict(df, feature_cols)
     labeler.save(labeled_df)
     label_quality = evaluate_labeler_quality(labeled_df)
     print(f"Pseudo-label quality vs truth: {label_quality}")
@@ -85,6 +93,14 @@ def run_one(name: str, labeler: BaseLabeler, df: pd.DataFrame, feature_cols: lis
             sample_output = clf.model.predict(sample_input)
             sig = infer_signature(sample_input, sample_output)
             mlflow.xgboost.log_model(clf.model, name="xgboost", signature=sig)
+
+        # Save the held-out session ids so the demo replays only unseen sessions
+        _, expected_test = split_train_holdout(df)
+        assert set(expected_test["session_id"]) == set(metrics["test_df"]["session_id"]), \
+            "labeler split and XGBoost split differ; check TEST_SIZE / RANDOM_STATE"
+        holdout_path = save_holdout_ids(metrics["test_df"])
+        mlflow.log_artifact(str(holdout_path))
+        mlflow.log_param("n_holdout_sessions", len(metrics["test_df"]))
 
         for k in ("labeler_precision", "labeler_recall", "labeler_f1"):
             mlflow.log_metric(k, label_quality[k])

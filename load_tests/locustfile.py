@@ -21,10 +21,14 @@ def _load_session_ids() -> list[str]:
     if not parquet_dir.exists():
         print("WARNING: parquet dir missing, using fake session IDs")
         return [f"fake_session_{i}" for i in range(1000)]
-    df = pd.read_parquet(parquet_dir)
-    ids = df["session_id"].dropna().unique().tolist()
+    ids: set[str] = set()
+    for f in parquet_dir.glob("*.parquet"):
+        try:
+            ids.update(pd.read_parquet(f, columns=["session_id"])["session_id"].dropna())
+        except Exception as e:
+            print(f"Skipping {f.name}: {e}")
     print(f"Loaded {len(ids)} session IDs for load test")
-    return ids
+    return list(ids)
 
 
 SESSION_IDS = _load_session_ids()

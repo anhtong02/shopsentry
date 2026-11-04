@@ -2,7 +2,7 @@
 
 ![Live demo](docs/shopsentry-demo.gif)
 
-*Sessions streaming through the served model. The demo replays sessions the model was trained on, so it shows the system working end to end. See [Results](#results) for held-out numbers.*
+*Held-out sessions streaming through the served model. The demo replays only the 30% test split the model never trained on, so the live scoreboard reflects unseen data. See [Results](#results) for the full evaluation.*
 
 ## What is it
 A real-time anomaly detector for simulated e-commerce traffic. It flags bot traffic and fraud rings using a full ML pipeline: simulated traffic → streaming feature engineering → model training and comparison → a served model with monitoring.
@@ -44,7 +44,7 @@ A real-time anomaly detector for simulated e-commerce traffic. It flags bot traf
 
 ## Results
 
-**Setup:** 7,169 sessions after removing duplicates, 16% true anomaly rate (bots + fraud rings), 9 session-level features. Each labeler makes its own labels, XGBoost trains on those labels, and the score is against the **true** labels on a held-out 30% test split.
+**Setup:** 7,169 sessions after removing duplicates, 16% true anomaly rate (bots + fraud rings), 9 session-level features. Each labeler makes its own labels, XGBoost trains on those labels, and the score is against the **true** labels on a held-out 30% test split. Labelers that learn from data (like the autoencoder) are fit on the 70% training split only.
 
 ### Model comparison
 
@@ -52,7 +52,7 @@ A real-time anomaly detector for simulated e-commerce traffic. It flags bot traf
 |---|---|---|---|---|---|
 | Isolation Forest | No | 0.39 | 0.44 | 69% | 28% |
 | Autoencoder, label-free | No | 0.02 | 0.02 | 0% | 2% |
-| **Autoencoder, 500 verified normals** | **Small trusted sample** | **0.89** | **0.88** | **100%** | **100%** |
+| **Autoencoder, 500 verified normals** | **Small trusted sample** | **0.87** | **0.86** | **100%** | **100%** |
 | Heuristic rules | Thresholds picked from the data | 1.00 | 1.00 | 100% | 100% |
 | Oracle (true labels) | Yes, all | 1.00 | 1.00 | 100% | 100% |
 
@@ -60,18 +60,18 @@ A real-time anomaly detector for simulated e-commerce traffic. It flags bot traf
 
 ### How many verified sessions does it need?
 
-Run 5 times per size, each with a different random sample (`sweep_verified.py`):
+Run 5 times per size, each with a different random sample drawn from the training split (`sweep_verified.py`):
 
 | Verified normals | F1 min | F1 avg | F1 max |
 |---|---|---|---|
-| 50 | 0.00 | 0.59 | 0.94 |
-| 100 | 0.76 | 0.87 | 0.93 |
-| 200 | 0.75 | 0.83 | 0.87 |
-| 500 | 0.83 | 0.88 | 0.90 |
+| 50 | 0.72 | 0.82 | 0.94 |
+| 100 | 0.75 | 0.83 | 0.90 |
+| 200 | 0.82 | 0.84 | 0.88 |
+| 500 | 0.72 | 0.86 | 0.95 |
 
-Below 100, results swing from total failure to great depending on which sessions get picked. At 500 (about 8% of normal sessions), it's stable.
+More verified sessions raise the average slowly (0.82 at 50 to 0.86 at 500), and even 50 works. But every size still swings by 0.1 to 0.2 depending on which sessions get picked, so the sample size isn't what limits F1. The threshold is (see below). An earlier version of this table came from a run where the verified sample could overlap the test set; it showed 50 sessions sometimes failing completely (F1 = 0.00). With the sample drawn from the training split only, no run failed.
 
-**Why F1 tops out around 0.88:** recall is 100%, every bot and fraud session gets caught. The misses are false alarms. The threshold flags the 5% most unusual normal sessions by design, which keeps precision around 0.8. I didn't tune the threshold, because picking it by looking at test results would be using the answers.
+**Why F1 tops out around 0.86:** recall is 100%, every bot and fraud session gets caught. The misses are false alarms. The threshold flags the 5% most unusual normal sessions by design, which keeps precision around 0.75. I didn't tune the threshold, because picking it by looking at test results would be using the answers.
 
 ### What I found and fixed
 
