@@ -16,12 +16,13 @@ import pandas as pd
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 # --- THE ULTIMATE WINDOWS PYSPARK PATCH ---
 # These lines force Windows to behave like Linux. ---
-os.environ["PYSPARK_PYTHON"] = sys.executable
-os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
-os.environ["SPARK_HOME"] = os.path.dirname(pyspark.__file__)
-os.environ["HADOOP_HOME"] = r"C:\hadoop"
-os.environ["PATH"] = r"C:\hadoop\bin" + ";" + os.environ["PATH"]
-os.environ["JAVA_HOME"] = r"C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot"
+if sys.platform == "win32":
+    os.environ["PYSPARK_PYTHON"] = sys.executable
+    os.environ["PYSPARK_DRIVER_PYTHON"] = sys.executable
+    os.environ["SPARK_HOME"] = os.path.dirname(pyspark.__file__)
+    os.environ["HADOOP_HOME"] = r"C:\hadoop"
+    os.environ["PATH"] = r"C:\hadoop\bin" + ";" + os.environ["PATH"]
+    os.environ["JAVA_HOME"] = r"C:\Program Files\Microsoft\jdk-17.0.18.8-hotspot"
 # ------------------------------------------
 logging.getLogger("py4j").setLevel(logging.ERROR)
 
@@ -74,7 +75,7 @@ def main() -> None:
     #result of raw_stream is a DataFrame with columns key, value, topic, partition, offset. The actual JSON is in the value column as binary.
     raw_stream = spark.readStream \
         .format("kafka") \
-        .option("kafka.bootstrap.servers", "localhost:19092") \
+        .option("kafka.bootstrap.servers", os.getenv("KAFKA_BROKER", "localhost:19092")) \
         .option("subscribe", "shop-events") \
         .option("startingOffsets", "latest") \
         .load()
@@ -147,7 +148,10 @@ def main() -> None:
         t2 = time.time()
 
         # Write Parquet from Pandas — skips Spark's write overhead
-        output_path = f"feature_repo/feature_repo/data/offline_features/batch_{batch_id}.parquet"
+        output_path = f"feature_repo/feature_repo/data/offline_features/batch_{int(time.time())}_{batch_id}.parquet"
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        
+        
         pdf.to_parquet(output_path, index=False)
         t3 = time.time()
 

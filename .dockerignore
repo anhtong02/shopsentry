@@ -4,3 +4,4 @@ mlflow_artifacts/
 data/
 **/__pycache__/
 .git/
+feature_repo/feature_repo/data/offline_features/

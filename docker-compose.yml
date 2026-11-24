@@ -109,5 +109,20 @@ services:
     depends_on:
       - redpanda
     restart: on-failure
+
+  spark-job:
+    build:
+      context: .
+      dockerfile: pipeline/Dockerfile
+    container_name: shopsentry-spark-job
+    environment:
+      KAFKA_BROKER: redpanda:29092
+      REDIS_CONNECTION_STRING: redis:6379
+    volumes:
+      - ./feature_repo/feature_repo/data:/app/feature_repo/feature_repo/data
+    depends_on:
+      - redpanda
+      - redis
+    restart: on-failure
 volumes:
   mlflow-data:
