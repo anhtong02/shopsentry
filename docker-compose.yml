@@ -98,5 +98,17 @@ services:
       - redpanda
       - redis
     restart: on-failure
+  scorer:
+    build:
+      context: .
+      dockerfile: scorer/Dockerfile
+    container_name: shopsentry-scorer
+    environment:
+      API_URL: http://api:8000
+    volumes:
+      - ./feature_repo/feature_repo/data:/app/feature_repo/feature_repo/data
+    depends_on:
+      - api
+    restart: on-failure
 volumes:
   mlflow-data:
