@@ -8,7 +8,7 @@
 #into a local memory queue and starts 50ms later (hence linger.ms =50)
 #Once 50ms hit or queue reaches 10,000 events, it compresses the data
 #into much smaller file and sned it. Since the size is way smaller,
-#it sends very quickly to red panda. This helps achieve 10,000 events/sec
+#it sends very quickly to red panda. 
 #
 
 
@@ -16,11 +16,11 @@ import logging
 from confluent_kafka import Producer
 from simulator.event_schema import BaseEvent
 from typing import Any
-
+import os
 logger = logging.getLogger(__name__)
 
 class EventProducer:
-    def __init__(self, broker: str = "localhost:19092", topic: str = "shop-events") -> None:
+    def __init__(self, broker: str = os.getenv("KAFKA_BROKER", "localhost:19092"), topic: str = "shop-events") -> None:
         """
         Initializes the connection to Redpanda/Kafka.
         Note: Using port 19092 as per your previous setup!

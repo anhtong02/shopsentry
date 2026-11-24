@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
  
 """
 This file defines the schema of events so when user performs an event,
-it follows the structure to ensure consistency.
+it follows the structure to ensure consistency and data integrity.
 
 These are the places that an events could exist:
 1. Simulator
@@ -30,6 +30,8 @@ class EventType(str, Enum):
     PRODUCT_VIEW = "product_view"
     CHECKOUT = "checkout"
     CLICK = "click"
+
+
 class BaseEvent(BaseModel):
     event_id: str = Field(default_factory=lambda: str(uuid4()))
     event_type: EventType
@@ -62,8 +64,7 @@ class SearchEvent(BaseEvent):
 class AddToCartEvent(BaseEvent):
     event_type: EventType = EventType.ADD_TO_CART
     product_id: str
-    quantity: int = 1  # <--- Add this line!
-
+    quantity: int = 1  
 
 class CheckoutEvent(BaseEvent):
     event_type: EventType = EventType.CHECKOUT

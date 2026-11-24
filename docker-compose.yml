@@ -98,5 +98,16 @@ services:
       - mlflow
       - redis
     restart: on-failure
+
+  simulator:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    container_name: shopsentry-simulator
+    environment:
+      KAFKA_BROKER: redpanda:29092
+    depends_on:
+      - redpanda
+    restart: on-failure
 volumes:
   mlflow-data:
