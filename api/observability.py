@@ -8,7 +8,7 @@ from prometheus_client import (
     Histogram,
     generate_latest
 )
-
+import os
 """
 Purpose:
 1. Defines prometheus metrics
@@ -73,7 +73,10 @@ def health(request: Request) -> Response:
 
     # 2. Redis reachable??
     try:
-        r = redis.Redis(host="localhost", port=6379, socket_connect_timeout=1)
+        r = redis.Redis(
+                host=os.getenv("REDIS_HOST", "localhost"),
+                port=int(os.getenv("REDIS_PORT", "6379")),
+                socket_connect_timeout=1,)   
         r.ping()
         checks["redis"] = {
             "ok": True

@@ -71,8 +71,32 @@ services:
     container_name: shopsentry-mlflow
     ports:
     - "5000:5000"
-    command: mlflow server --host 0.0.0.0
+    command: >
+      mlflow server --host 0.0.0.0
+      --backend-store-uri sqlite:////mlruns/mlflow.db
+      --artifacts-destination /mlruns/artifacts
+      --serve-artifacts
+      --allowed-hosts "mlflow,mlflow:5000,localhost,localhost:5000"
     volumes:
     - mlflow-data:/mlruns
+
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: shopsentry-api
+    ports:
+      - "8000:8000"
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_VERSION: "1"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_CONNECTION_STRING: redis:6379
+    depends_on:
+      - mlflow
+      - redis
+    restart: on-failure
 volumes:
   mlflow-data:

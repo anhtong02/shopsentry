@@ -3,5 +3,5 @@ registry: data/registry.db
 provider: local
 online_store:
     type: redis
-    connection_string: "localhost:6379"
+    connection_string: ${REDIS_CONNECTION_STRING}
 entity_key_serialization_version: 3

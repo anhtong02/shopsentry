@@ -5,6 +5,7 @@ import mlflow.sklearn
 import mlflow.xgboost
 import numpy as np
 from typing import Any
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +38,8 @@ class LoadedModels:
 def load_from_registry(
         classifier_name: str = "shopsentry_classifier",
         scaler_name: str = "shopsentry_scaler",
-        version: str = "8",
-        tracking_uri: str = "http://localhost:5000",
+        version: str = os.getenv("MODEL_VERSION", "8"),
+        tracking_uri: str = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 ) -> LoadedModels:
         
         mlflow.set_tracking_uri(tracking_uri)
