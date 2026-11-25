@@ -1,0 +1,8 @@
+# Tells Grafana to load every dashboard JSON file in /var/lib/grafana/dashboards.
+apiVersion: 1
+providers:
+  - name: shopsentry
+    folder: ShopSentry
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

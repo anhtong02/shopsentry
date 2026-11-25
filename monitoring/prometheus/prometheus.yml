@@ -1,0 +1,11 @@
+# Prometheus visits each target's /metrics page every 15s and stores the numbers.
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: monitor          # model performance: precision, recall, F1, flag rates
+    static_configs:
+      - targets: ["monitor:8001"]
+  - job_name: api              # API health: requests, latency, predictions
+    static_configs:
+      - targets: ["api:8000"]
